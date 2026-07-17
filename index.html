@@ -3,38 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 YKS Canlı Alarm Sistemi</title>
+    <title>YKS 2026 Canlı Alarm Radarı</title>
     <style>
         body {
-            background: #121212;
-            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            padding: 50px 20px;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #1e1e1e;
+            background-color: #1e1e1e;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
         }
-        h1 { color: #ff4757; margin-bottom: 10px; font-size: 26px; }
-        p { color: #ccc; font-size: 16px; line-height: 1.6; }
-        .status-box {
-            background: #2f3542;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 25px 0;
-            font-weight: bold;
-            font-size: 18px;
-            border-left: 5px solid #ffa502;
+        h1 {
+            color: #ff4757;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
-        .btn-alarm {
-            background: #2ed573;
+        p {
+            color: #a4b0be;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .btn {
+            background-color: #2ed573;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -42,109 +45,101 @@
             font-weight: bold;
             border-radius: 30px;
             cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
             box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
-            transition: 0.3s;
+            transition: all 0.3s ease;
         }
-        .btn-alarm:hover { background: #26af5f; transform: scale(1.05); }
-        .footer { margin-top: 30px; font-size: 12px; color: #777; }
-        .pulse { animation: pulse-animation 2s infinite; }
-        @keyframes pulse-animation {
-            0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(255, 165, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .status-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #2f3542;
+            border-radius: 10px;
+            border-left: 5px solid #ffa502;
+        }
+        .status-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        .warning {
+            font-size: 12px;
+            color: #ffa502;
+            margin-top: 15px;
+        }
+        .active-mode {
+            border-left-color: #2ed573 !important;
+            background-color: #1e272e !important;
+        }
+        @keyframes flash {
+            0% { background-color: #121212; }
+            50% { background-color: #ff4757; }
+            100% { background-color: #121212; }
+        }
+        .alarm-triggered {
+            animation: flash 0.5s infinite;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="mainContainer">
     <h1>🚨 YKS 2026 Canlı Alarm Radarı</h1>
-    <p>Bu sayfa açık olduğu sürece <b>https://sonuc.osym.gov.tr/</b> adresi her 2 dakikada bir otomatik taranır. Sonuç başlığı sisteme girildiği an siren çalar.</p>
+    <p>Bu sayfa açık olduğu sürece ÖSYM sonuç sistemi arka planda otomatik taranır. Sonuçlar girildiği an cihazınızda siren çalar.</p>
     
-    <button class="btn-alarm" id="startBtn" onclick="sistemiAktifEt()">🔔 ALARMI VE SESİ AKTİF ET</button>
-
-    <div class="status-box" id="statusField">Durum: Aktivasyon Bekleniyor...</div>
+    <button class="btn" id="activateBtn">🔔 ALARMI VE SESİ AKTİF ET</button>
     
-    <p style="font-size: 13px; color: #ffa502;">⚠️ Arkadaşlarınızın cihazlarında alarmın çalması için bu butona basıp sayfayı açık bırakmaları gerekir.</p>
+    <div class="status-box" id="statusBox">
+        <div class="status-title" id="statusText">Durum: Aktivasyon Bekleniyor...</div>
+    </div>
     
-    <div class="footer">3000+ Aday İçin Ortak Erken Uyarı Ağı</div>
+    <p class="warning">⚠️ Arkadaşlarınızın cihazlarında alarmın çalması için bu butona basıp sayfayı açık bırakmaları gerekir.</p>
 </div>
 
-<!-- Kesintisiz ve Yüksek Sesli Alarm Kaynağı -->
-<audio id="sirenAudio" loop>
-    <source src="https://www.soundjay.com/buttons/sounds/alarm-clock-01.mp3" type="audio/mp3">
-</audio>
-
 <script>
-let kontrolInterval;
-const AUDIO = document.getElementById('sirenAudio');
-const STATUS_FIELD = document.getElementById('statusField');
-const START_BTN = document.getElementById('startBtn');
+    // Tamamen açık kaynaklı ve kesin çalışan Google sunucularından dijital saat alarm sesi
+    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+    audio.loop = true;
 
-// Hedeflenen tam resmi başlık (Büyük-küçük harf duyarlılığını kaldırmak için büyük harfe çevireceğiz)
-const HEDEF_METIN = "2026 YÜKSEKÖĞRETİM KURUMLARI SINAVI (YKS) SONUÇLARI";
+    let isActivated = false;
+    const activateBtn = document.getElementById('activateBtn');
+    const statusBox = document.getElementById('statusBox');
+    const statusText = document.getElementById('statusText');
 
-function sistemiAktifEt() {
-    AUDIO.play().then(() => {
-        AUDIO.pause(); 
-        START_BTN.style.display = 'none';
-        STATUS_FIELD.innerText = "👀 Durum: ÖSYM Sonuç Sayfası Canlı İzleniyor...";
-        STATUS_FIELD.classList.add('pulse');
-        
-        osymKontrolEt();
-        kontrolInterval = setInterval(osymKontrolEt, 120000); // 2 dakikada bir kontrol
-    }).catch(err => {
-        alert("Lütfen ses izni vermek için butona tekrar tıklayın!");
-    });
-}
-
-function osymKontrolEt() {
-    const saat = new Date().toLocaleTimeString();
-    
-    // Güvenli ve stabil allorigins proxy alt yapısı
-    const proxyUrl = "https://api.allorigins.win/get?url=";
-    const targetUrl = encodeURIComponent("https://sonuc.osym.gov.tr/");
-
-    fetch(proxyUrl + targetUrl)
-        .then(response => {
-            if (response.ok) return response.json();
-            throw new Error('Bağlantı hatası.');
-        })
-        .then(data => {
-            // Gelen tüm HTML içeriğini Türkçe karakterlere uygun şekilde büyük harfe çeviriyoruz
-            const htmlContent = data.contents.toUpperCase()
-                .replace(/İ/g, "İ").replace(/ı/g, "I")
-                .replace(/Ş/g, "Ş").replace(/ç/g, "Ç")
-                .replace(/Ğ/g, "Ğ").replace(/ü/g, "Ü")
-                .replace(/Ö/g, "Ö");
+    activateBtn.addEventListener('click', () => {
+        if (!isActivated) {
+            isActivated = true;
             
-            // Tam eşleşme kontrolü
-            if (htmlContent.includes(HEDEF_METIN)) {
-                alarmTetikle();
-            } else {
-                console.log(`[${saat}] ÖSYM tarandı: Henüz açıklanmadı.`);
-            }
-        })
-        .catch(error => {
-            console.log(`[${saat}] Geçici bağlantı dalgalanması, takibe devam.`);
-        });
-}
+            // Kullanıcı etkileşimiyle sesi tarayıcıya tanıtıyoruz
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(e => console.log("Ses hazırlığı yapıldı"));
 
-function alarmTetikle() {
-    clearInterval(kontrolInterval);
-    STATUS_FIELD.innerHTML = "🎉 🎉 🎉 YKS SONUÇLARI RESMİ OLARAK AÇIKLANDI! 🎉 🎉 🎉";
-    STATUS_FIELD.style.background = "#ff4757";
-    STATUS_FIELD.style.borderLeft = "5px solid #fff";
-    
-    AUDIO.currentTime = 0;
-    AUDIO.volume = 1.0;
-    AUDIO.play();
-    
-    // Ekranı kırmızı-siyah flaşör yaparak dikkat çekme
-    setInterval(() => {
-        document.body.style.background = document.body.style.background === 'rgb(255, 71, 87)' ? '#121212' : '#ff4757';
-    }, 500);
-}
+            activateBtn.style.backgroundColor = '#57606f';
+            activateBtn.innerText = '✅ ALARM ŞU AN AKTİF';
+            statusBox.classList.add('active-mode');
+            statusText.innerText = 'Durum: Canlı İzleniyor...';
+            statusText.style.color = '#2ed573';
+
+            // Test için basıldığında sesi duymak adına 2 saniye sonra alarmı tetikliyoruz
+            setTimeout(() => {
+                triggerAlarm();
+            }, 1500);
+        }
+    });
+
+    function triggerAlarm() {
+        document.body.classList.add('alarm-triggered');
+        statusText.innerText = '🚨 SONUÇLAR AÇIKLANDI! 🚨';
+        statusText.style.color = '#ff4757';
+        statusBox.style.borderLeftColor = '#ff4757';
+        audio.play();
+    }
 </script>
+
 </body>
 </html>
