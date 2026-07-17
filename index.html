@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YKS 2026 Canlı Alarm Radarı - SES TESTİ</title>
+    <title>YKS 2026 Canlı Alarm Radarı - KESİN SES TESTİ</title>
     <style>
         body { background-color: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; font-family: sans-serif; }
         .box { background: #1a1a1a; padding: 30px; border-radius: 20px; width: 85%; max-width: 400px; box-sizing: border-box; }
@@ -11,38 +11,61 @@
         button { background: #2ed573; color: white; border: none; padding: 20px; border-radius: 50px; font-weight: bold; width: 100%; font-size: 16px; margin-top: 20px; cursor: pointer; }
         #durum { margin-top: 20px; font-weight: bold; color: #ffa502; }
         @keyframes flash { 0% { background-color: #000; } 50% { background-color: #ff4757; } 100% { background-color: #000; } }
-        .alarm-triggered { animation: flash 0.5s infinite; }
+        .alarm-triggered { animation: flash 0.3s infinite; }
     </style>
 </head>
 <body>
 <div class="box">
-    <h1>🚨 YKS 2026 Ses Testi</h1>
-    <p>Butona bastıktan 1.5 saniye sonra alarm çalacaktır.</p>
-    <button id="btn">🔔 TESTİ BAŞLAT VE SESİ AÇ</button>
+    <h1>🚨 YKS 2026 Yapay Zeka Alarmı</h1>
+    <p>İnternetsiz çalışan yerel ses motoru entegre edildi.</p>
+    <button id="btn">🔔 TESTİ BAŞLAT (KESİN ÇALAR)</button>
     <div id="durum">Durum: Test Bekleniyor...</div>
 </div>
+
 <script>
-    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
-    audio.volume = 1.0; // Yazılımsal sesi sona vur
-    audio.loop = true;
+    let audioCtx = null;
+    let alarmInterval = null;
+
+    // Telefonun kendi içindeki bip sesi motorunu tetikleyen fonksiyon
+    function playBeep(frequency, duration) {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime); // Ses tonu kalınlığı
+        gainNode.gain.setValueAtTime(1.0, audioCtx.currentTime); // Maksimum ses seviyesi
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        
+        // Sesi yumuşakça bitirerek kesilmesini sağla
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        oscillator.stop(audioCtx.currentTime + duration);
+    }
 
     document.getElementById('btn').addEventListener('click', () => {
-        document.getElementById('durum').innerText = "1.5 saniye sonra alarm çalacak, ses seviyenizi kontrol edin...";
+        document.getElementById('durum').innerText = "1.5 saniye sonra yüksek sesli bip başlayacak...";
         
-        // Önce tarayıcı kilidini açıyoruz
-        audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            
-            // 1.5 saniye sonra alarmı patlatıyoruz
-            setTimeout(() => {
-                document.body.classList.add('alarm-triggered');
-                document.getElementById('durum').innerText = "🚨 ALARM ÇALIYOR! 🚨";
-                document.getElementById('durum').style.color = "#ff4757";
-                audio.play();
-            }, 1500);
-        });
+        setTimeout(() => {
+            document.body.classList.add('alarm-triggered');
+            document.getElementById('durum').innerText = "🚨 ALARM AKTİF! OYNATILIYOR... 🚨";
+            document.getElementById('durum').style.color = "#ff4757";
+
+            // Her 0.5 saniyede bir kesintisiz "BİP" sesi üretir (Gerçek dijital saat alarmı gibi)
+            if(!alarmInterval) {
+                alarmInterval = setInterval(() => {
+                    playBeep(880, 0.2); // 880Hz tizliğinde, 0.2 saniye süren net bip sesi
+                }, 400);
+            }
+        }, 1500);
     });
 </script>
 </body>
 </html>
+
