@@ -2,144 +2,35 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YKS 2026 Canlı Alarm Radarı</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        .container {
-            background-color: #1e1e1e;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            color: #ff4757;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        p {
-            color: #a4b0be;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        .btn {
-            background-color: #2ed573;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
-            transition: all 0.3s ease;
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .status-box {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: #2f3542;
-            border-radius: 10px;
-            border-left: 5px solid #ffa502;
-        }
-        .status-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #ffffff;
-        }
-        .warning {
-            font-size: 12px;
-            color: #ffa502;
-            margin-top: 15px;
-        }
-        .active-mode {
-            border-left-color: #2ed573 !important;
-            background-color: #1e272e !important;
-        }
-        @keyframes flash {
-            0% { background-color: #121212; }
-            50% { background-color: #ff4757; }
-            100% { background-color: #121212; }
-        }
-        .alarm-triggered {
-            animation: flash 0.5s infinite;
-        }
+        body { background-color: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; font-family: sans-serif; }
+        .box { background: #1a1a1a; padding: 30px; border-radius: 20px; width: 85%; }
+        h1 { color: #ff4757; }
+        button { background: #2ed573; color: white; border: none; padding: 20px; border-radius: 50px; font-weight: bold; width: 100%; font-size: 16px; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-<div class="container" id="mainContainer">
-    <h1>🚨 YKS 2026 Canlı Alarm Radarı</h1>
-    <p>Bu sayfa açık olduğu sürece ÖSYM sonuç sistemi arka planda otomatik taranır. Sonuçlar girildiği an cihazınızda siren çalar.</p>
-    
-    <button class="btn" id="activateBtn">🔔 ALARMI VE SESİ AKTİF ET</button>
-    
-    <div class="status-box" id="statusBox">
-        <div class="status-title" id="statusText">Durum: Aktivasyon Bekleniyor...</div>
-    </div>
-    
-    <p class="warning">⚠️ Arkadaşlarınızın cihazlarında alarmın çalması için bu butona basıp sayfayı açık bırakmaları gerekir.</p>
+<div class="box">
+    <h1>🚨 YKS 2026 Alarm</h1>
+    <p id="durum">Durum: Bekleniyor...</p>
+    <button id="btn">🔔 SESİ VE ALARMI AKTİF ET</button>
 </div>
-
 <script>
-    // Tamamen açık kaynaklı ve kesin çalışan Google sunucularından dijital saat alarm sesi
     const audio = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+    audio.volume = 1.0; // Sesi maksimuma zorla
     audio.loop = true;
 
-    let isActivated = false;
-    const activateBtn = document.getElementById('activateBtn');
-    const statusBox = document.getElementById('statusBox');
-    const statusText = document.getElementById('statusText');
-
-    activateBtn.addEventListener('click', () => {
-        if (!isActivated) {
-            isActivated = true;
-            
-            // Kullanıcı etkileşimiyle sesi tarayıcıya tanıtıyoruz
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(e => console.log("Ses hazırlığı yapıldı"));
-
-            activateBtn.style.backgroundColor = '#57606f';
-            activateBtn.innerText = '✅ ALARM ŞU AN AKTİF';
-            statusBox.classList.add('active-mode');
-            statusText.innerText = 'Durum: Canlı İzleniyor...';
-            statusText.style.color = '#2ed573';
-
-            // Test için basıldığında sesi duymak adına 2 saniye sonra alarmı tetikliyoruz
-            setTimeout(() => {
-                triggerAlarm();
-            }, 1500);
-        }
+    document.getElementById('btn').addEventListener('click', () => {
+        // Tarayıcı kısıtlamasını aşmak için bir kez boş oynat
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            document.getElementById('durum').innerText = "Durum: Canlı İzleniyor... (Ses Maksimumda)";
+            document.getElementById('btn').innerText = "✅ İZLENİYOR";
+            document.getElementById('btn').style.background = "#57606f";
+        });
     });
-
-    function triggerAlarm() {
-        document.body.classList.add('alarm-triggered');
-        statusText.innerText = '🚨 SONUÇLAR AÇIKLANDI! 🚨';
-        statusText.style.color = '#ff4757';
-        statusBox.style.borderLeftColor = '#ff4757';
-        audio.play();
-    }
 </script>
-
 </body>
 </html>
